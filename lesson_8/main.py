@@ -1,55 +1,105 @@
 #from fastai import datasets as fastai_datasets
+import gzip
+import numpy as np
 import os
 import pdb
-import requests
+from sklearn.model_selection import train_test_split
+import struct
+import torch
+from torch import tensor
 
-def request_file(req_url, destination_path, replace=False):
-    """ Download file if not exists """ 
-    if not replace and os.path.exists(destination_path):
-        print(f"    Already exists: {destination_path}")
-        return
+import matplotlib.pyplot as plt
 
-    # To emulate a browser and avoid being blocked.
-    headers = {
-        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36',
-    }
+def plot_digit(data, true_label, predict_label=None):
 
-    r = requests.get(req_url, headers=headers)
-    open(destination_path, 'wb').write(r.content)
+    if predict_label is None:
+        title = f'label: {true_label}'
+    else:
+        title = f'label: {true_label}, prediction: {predict_label}'
 
-    print(f"    Downloaded: {destination_path}")
+    plt.imshow(data, cmap='gray')
+    plt.title(title)
+    plt.show()
 
-def download_mnist(destination_folder):
-    """ Download MNIST data to destination folder if files don't exsits. """
+def plot_flat_digit(data, true_label, predict_label=None):
+    plot_digit(data.view(28,28), true_label)
 
-    # Source: Yann Lecun ;) http://yann.lecun.com/exdb/mnist/index.html
-    common_url = 'http://yann.lecun.com/exdb/mnist/'
-    for dataset_name in ['train-images-idx3-ubyte.gz', 'train-labels-idx1-ubyte.gz',
-                        't10k-images-idx3-ubyte.gz', 't10k-labels-idx1-ubyte.gz']:
-        print(f"Downloading file (if not previously downloaded): {dataset_name}")
-        file_url = os.path.join(common_url, dataset_name)
-        dest_file_path = os.path.join(destination_folder, dataset_name)
+def load_mnist_images_ubyte(filename):
+    # https://medium.com/the-owl/converting-mnist-data-in-idx-format-to-python-numpy-array-5cb9126f99f1
 
-        request_file(file_url, dest_file_path)
+    with gzip.open(filename, 'rb') as f:
+        magic = struct.unpack('>4B', f.read(4))
+
+        num_img = struct.unpack('>I',f.read(4))[0]
+        num_rows = struct.unpack('>I',f.read(4))[0]
+        num_cols = struct.unpack('>I',f.read(4))[0]
+
+        #images_array = np.zeros((num_img,num_rows,num_cols))
+
+        # each pixel = 1 byte
+        # 'B' is used since it is of 'unsigned char' C type and 'integer' Python type and has standard size 1 as mentioned in the official documentation of struct.
+        # '>' is used since the data is in MSB first (high endian) format used by most non-Intel processors, as mentioned in their original website.
+        total_bytes = num_img * num_rows * num_cols
+        images_array = np.asarray(struct.unpack('>'+'B'*total_bytes, f.read(total_bytes))).reshape((num_img,num_rows,num_cols))
+
+    return images_array
+
+
+def load_mnist_labels_ubyte(filename):
+    with gzip.open(filename, 'rb') as f:
+        magic = struct.unpack('>4B', f.read(4))
+        num_labels = struct.unpack('>I',f.read(4))[0]
+        total_bytes = num_labels
+        labels_array = np.asarray(struct.unpack('>'+'B'*total_bytes, f.read(total_bytes))).reshape((num_labels))
+
+    return labels_array
+
+def mnist_to_flat_images(array_3d):
+    return array_3d.reshape(array_3d.shape[0], array_3d.shape[1]*array_3d.shape[2])
+
+def load_mnist():
+    # Dataset source http://yann.lecun.com/exdb/mnist/index.html
+
+    train_val_images = load_mnist_images_ubyte('inputs/train-images-idx3-ubyte.gz')
+    train_val_labels = load_mnist_labels_ubyte('inputs/train-labels-idx1-ubyte.gz')
+    test_images = load_mnist_images_ubyte('inputs/t10k-images-idx3-ubyte.gz')
+    test_labels = load_mnist_labels_ubyte('inputs/t10k-labels-idx1-ubyte.gz')
+    
+    # Transformations.
+    #   we one dimensional array for each image, reshaping each 28x28 matrix into 784x1 vectors
+    #   numpy arrays are not allowed by Jeremy so dataset are converted into tensors.
+
+    train_val_images = mnist_to_flat_images(train_val_images)
+    test_images = mnist_to_flat_images(test_images)
+
+    # Numpy array to tensors
+    X_train_val, y_train_val, X_test, y_test = map(tensor, (train_val_images, train_val_labels, test_images, test_labels))
+
+    # Split with the same ratio as the lesson 8: train: 50000, valid: 10000
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train_val, y_train_val, test_size=1/6, random_state=42)
+
+    return X_train, y_train, X_valid, y_valid, X_test, y_test
 
 def main():
     # -----------------------------------------
-    # Prepare Folders and download datasets
+    # Prepare Folders and load mnist
     # -----------------------------------------
 
-    # download dataset if not exists
-    inputs_folder = 'inputs/'
-    outputs_folder = 'outputs/'
-    for f in [inputs_folder, outputs_folder]:
+    for f in ['inputs/', 'outputs/']:
         os.makedirs(f, exist_ok=True)
 
-    download_mnist(inputs_folder)
+    # Load mnist into tensors
+    X_train, y_train, X_valid, y_valid, X_test, y_test = load_mnist()
 
     # -----------------------------------------
-    # 
+    # Initial linear model
     # -----------------------------------------
-
+    # y = A * X + B
+    weights = torch.randn(784, 10)
+    bias = torch.zeros(10)
+    plot_flat_digit(X_train[0], y_train[0])
     pdb.set_trace()
 
+    #plot_digit(train_images[0], train_labels[0])
 if __name__ == "__main__":
     main()
