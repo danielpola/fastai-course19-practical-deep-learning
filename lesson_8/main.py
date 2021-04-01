@@ -100,6 +100,8 @@ def main():
     plot_flat_digit(X_train[0], y_train[0])
     pdb.set_trace()
 
+    # TODO: Study tensors broadcast!!
+
     #plot_digit(train_images[0], train_labels[0])
 if __name__ == "__main__":
     main()
