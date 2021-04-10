@@ -1,1 +1,9 @@
-# Lesson 8
+# Lesson 8: Matrix multiplication; forward and backward passes
+
+Lesson url
+
+    https://course19.fast.ai/videos/?lesson=8
+
+Video url
+
+    https://www.youtube.com/watch?v=4u8FxNEDUeg

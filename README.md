@@ -1,12 +1,10 @@
 # fastai-course19-practical-deep-learning
 
-Codes of my learning journy with the courses:
+Codes of my learning journey for the fastai courses (2019). 
 * [Fast AI 2019 (Part 1): Practical Deep Learning for Coders, v3](https://course19.fast.ai/) 
 * [Fast AI 2019 (Part 2): Deep Learning from the Foundations](https://course19.fast.ai/part2)
 
-Jeremy prefers jupyter notebooks and uses them in the courses, but as I'm used to work with Python scripts or programs I'm replicating parts of the lessons in scripts.
-
-Just for academic purposes!
+Just for academic purposes and to share code between my desktop and laptop!
 
 ## Versions
 
