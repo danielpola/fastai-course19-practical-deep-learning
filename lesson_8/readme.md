@@ -7,3 +7,12 @@ Lesson url
 Video url
 
     https://www.youtube.com/watch?v=4u8FxNEDUeg
+
+# Key Concepts
+
+* Broadcast
+* Kaiming Initialisation
+
+# TOPICS TO STUDY
+* CROSS ENTROPY
+* Cómo adaptar para clasificación o regresión.
