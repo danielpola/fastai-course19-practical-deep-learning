@@ -27,7 +27,10 @@ class Lin(Module):
     def forward(self, inp): return inp@self.w + self.b
     def bwd(self, inp, out): 
         inp.grad = out @ self.w.t()
-        self.w.grad = torch.einsum("bi,bj->ij", inp, out.grad)
+        # With and Without einsum
+        # self.w.grad = torch.einsum("bi,bj->ij", inp, out.grad)
+        # self.w.grad = inp.t() @ out.grad
+        self.w.grad = inp.t() @ out.grad
         self.b.grad = out.grad.sum(0)
 
 class Mse(Module):
